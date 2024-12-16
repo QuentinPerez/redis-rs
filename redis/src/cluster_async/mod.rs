@@ -1294,6 +1294,7 @@ where
     if let Some(push_sender) = push_sender {
         config = config.set_push_sender_internal(push_sender);
     }
+    dbg!(&info);
     let mut conn: C = C::connect_with_config(info, config).await?;
 
     let check = if read_from_replicas {

@@ -454,7 +454,16 @@ pub(crate) async fn connect_simple<T: RedisRuntime>(
     Ok(match connection_info.addr {
         ConnectionAddr::Tcp(ref host, port) => {
             let socket_addrs = get_socket_addrs(host, port).await?;
-            select_ok(socket_addrs.map(<T>::connect_tcp)).await?.0
+            let sockets = socket_addrs.into_iter().collect::<Vec<_>>();
+
+            dbg!(&sockets);
+            select_ok(sockets.into_iter().map(|value| {
+                <T>::connect_tcp(value).inspect(move |res| {
+                    dbg!(&value, res.as_ref().err());
+                })
+            }))
+            .await?
+            .0
         }
 
         #[cfg(any(feature = "tls-native-tls", feature = "tls-rustls"))]
